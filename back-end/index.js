@@ -1,17 +1,18 @@
 const express = require('express')
 const cors = require('cors')
 const mysql = require('mysql')
-const dbconfig = require('./dbconfig')
+const db = require('./dbconfig')
 
 const app = express()
 app.use(express.json())
 
 const SELECT_ALL_BLOGS_QUERY = 'SELECT * FROM blogs'
 
-const connection = mysql.createConnection(dbconfig)
+const connection = mysql.createConnection(db.config)
 
 connection.connect(err => {
     if(err) {
+        console.log(err, dbconfig, 'errr');
         return err;
     }
 })
