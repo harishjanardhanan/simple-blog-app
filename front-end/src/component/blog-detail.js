@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css';
+import { serviceClient } from './service-client';
 
 class BlogDetail extends Component {
 
@@ -19,15 +20,10 @@ class BlogDetail extends Component {
     }
 
     getBlogDetail = () => {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        }
-        fetch(`http://localhost:4000/blog/${this.state.id}`, requestOptions)
-            .then(response => response.json())
-            .then(response => this.setState({ blogData: response.data }))
-            .catch(err => console.log(err))
+        serviceClient(`http://localhost:4000/blog/${this.state.id}`, (response, err) => {
+            if (err) console.log(err)
+            this.setState({ blogData: response.data })
+        })
     }
     editData = () => {
         const { blogData } = this.state
@@ -35,15 +31,12 @@ class BlogDetail extends Component {
     }
     updateBlog = () => {
         const { blog } = this.state
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: this.state.id, title: blog.title, body: blog.body })
-        }
-        fetch(`http://localhost:4000/edit-blog`, requestOptions)
-            .then(this.setState({ isEditing: false }))
-            .then(this.getBlogDetail)
-            .catch(err => console.log(err))
+        const requestBody = { id: this.state.id, title: blog.title, body: blog.body }
+        serviceClient('http://localhost:4000/edit-blog', (response, err) => {
+            if (err) console.log(err)
+            this.setState({ isEditing: false })
+            this.getBlogDetail
+        }, requestBody)
     }
     cancelEdit = () => {
         const { blogData } = this.state
@@ -58,29 +51,37 @@ class BlogDetail extends Component {
         return (
             <div>
                 {isEditing ?
-                    <div>
-                        <div>
+                    <div className='ma3'>
+                        <div className='ml3 mb3'>
                             Title:
                             <input
                                 value={blog.title}
+                                className='ml3 w-60'
                                 onChange={e => this.setState({ blog: { ...blog, title: e.target.value } })} />
                         </div>
-                        <div>
-                            Content:
+                        <div className='ml3'>
+                            <div className='mb2'>Content:</div>
                             <textarea
+                                className='w-60 h5 mb3'
                                 value={blog.body}
                                 onChange={e => this.setState({ blog: { ...blog, body: e.target.value } })} />
                         </div>
-                        <button onClick={this.updateBlog}>Submit</button>
-                        <button onClick={this.cancelEdit}>Cancel</button>
+                        <button className='mr3 br2 pointer' onClick={this.updateBlog}>Submit</button>
+                        <button className='br2 pointer' onClick={this.cancelEdit}>Cancel</button>
                     </div>
                     : <div>
-                        <Link to='/blogs'><button>Goto Homepage</button></Link>
-                        <button onClick={this.editData}>Edit the Blog</button>
+                        <div className='ml3 mr4 flex justify-between items-center mt3'>
+                            <Link to='/blogs'><button className='br2 pointer'>Goto Homepage</button></Link>
+                            {window.sessionStorage.getItem('user') && <button className='br2 pointer' onClick={this.editData}>Edit the Blog</button>}
+                        </div>
                         <div>
-                            <h3>{blogData && blogData.title}</h3> Published date: {blogData && blogData.date && blogData.date.split('T')[0]}
-                            <br></br><br></br>
-                            <p>{blogData && blogData.body}</p>
+                            <div className='flex justify-between items-center mb3 mr4 ml3'>
+                                <h2>{blogData && blogData.title}</h2>
+                                Published date: {blogData && blogData.date && blogData.date.split('T')[0]}
+                            </div>
+                            <div className='ma3'>
+                                <pre>{blogData && blogData.body}</pre>
+                            </div>
                         </div>
                     </div>
                 }

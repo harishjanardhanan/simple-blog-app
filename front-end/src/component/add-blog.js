@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css';
+import { serviceClient } from './service-client';
+import MessageModal from './message-modal';
 
 class AddBlog extends Component {
 
@@ -9,7 +11,9 @@ class AddBlog extends Component {
             title: '',
             body: '',
             date: ''
-        }
+        },
+        openModal: false,
+        messageData: ''
     }
 
     componentDidMount() {
@@ -18,36 +22,46 @@ class AddBlog extends Component {
 
     addBlogData = () => {
         const { blog } = this.state
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: blog.title, body: blog.body })
-        }
-        fetch(`http://localhost:4000/add-blog`, requestOptions)
-            .then(data => console.log(data))
-            .catch(err => console.log(err))
+        const requestBody = { title: blog.title, body: blog.body }
+        serviceClient('http://localhost:4000/add-blog', (response) => {
+            this.setState({ messageData: response.message, openModal: true })
+        }, requestBody)
+    }
+
+    closeModal = () => {
+        this.setState({
+            messageData: '',
+            openModal: false
+        })
+        window.location.replace('../blogs')
     }
 
     render() {
-        const { blog } = this.state
+        const { blog, openModal, messageData } = this.state
         return (
             <div>
-                <Link to='/blogs'><button>Goto Homepage</button></Link>
+                <div className='flex justify-between mh3 items-center'>
+                    <h2 className=''> Add a new blog</h2>
+                    <Link to='/blogs'><button className='ma3 br2 pointer'>Goto Homepage</button></Link>
+                </div>
                 <div>
-                    <div>
+                    <div className='ml3 mb3'>
                         Title:
                         <input
                             value={blog.title}
+                            className='ml3 w-60'
                             onChange={e => this.setState({ blog: { ...blog, title: e.target.value } })} />
                     </div>
-                    <div>
-                        Content:
+                    <div className='ml3'>
+                        <div className='mb2'>Content:</div>
                         <textarea
+                            className='w-60 h5'
                             value={blog.body}
                             onChange={e => this.setState({ blog: { ...blog, body: e.target.value } })} />
                     </div>
-                    <button onClick={this.addBlogData}>Add blog</button>
+                    <button className='ma3 br2 pointer' disabled={!(blog.title && blog.body)} onClick={this.addBlogData}>Add blog</button>
                 </div>
+                <MessageModal openModal={openModal} onCloseModal={this.closeModal} data={messageData} />
             </div>
         );
     }

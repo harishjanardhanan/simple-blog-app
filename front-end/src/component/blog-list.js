@@ -8,15 +8,20 @@ class BlogList extends Component {
 
     state = {
         openLoginModal: false,
-        blogs: []
+        blogs: [],
+        isLoggedin: window.sessionStorage.getItem('user') ? true : false
     }
 
     componentDidMount() {
         this.getBlogs()
+        this.setState({
+            isLoggedin: window.sessionStorage.getItem('user') ? true : false
+        })
     }
 
     getBlogs = async () => {
-        serviceClient('http://localhost:4000/blogs', (response) => {
+        serviceClient('http://localhost:4000/blogs', (response, err) => {
+            if (err) console.log(err)
             this.setState({ blogs: response && response.data })
         })
 
@@ -24,7 +29,8 @@ class BlogList extends Component {
 
     deleteBlog = (event) => {
         const body = { id: event.target.value }
-        serviceClient('http://localhost:4000/delete-blog', () => {
+        serviceClient('http://localhost:4000/delete-blog', (response, err) => {
+            if (err) console.log(err)
             this.getBlogs()
         }, body)
     }
@@ -38,41 +44,57 @@ class BlogList extends Component {
         this.setState({ openLoginModal: true })
     }
 
-    onLoginSubmit = () => {
+    onLogoutButtonClick = e => {
+        window.sessionStorage.clear()
         this.setState({
-            openLoginModal: false
+            isLoggedin: false
+        })
+    }
+
+    setLoginState = (isLoggedin) => {
+        this.setState({
+            isLoggedin
         })
     }
 
     render() {
-        const { blogs, openLoginModal } = this.state
+        const { blogs, openLoginModal, isLoggedin } = this.state
         return (
             <div>
-                <div className="flex justify-between">
-                    <Link to={`../add-blog`}>
-                        <button className='ma2'>Add a blog</button>
-                    </Link>
-                    <button className='ma2' onClick={this.onLoginButtonClick}>Login</button>
-                </div>
-                <table>
-                    <tr>
-                        <th>Title</th>
-                        <th>Blog</th>
-                        <th>Date</th>
-                    </tr>
-                    {(blogs || []).map(blog =>
-                        <tr key={blog.blog_id}>
-                            <Link to={`../blog/${blog.blog_id}`}>
-                                <td>{blog.title}</td>
+                <h2 className='ml3'>Blog List</h2>
+                <div className={`flex ${isLoggedin ? 'justify-between' : 'justify-end'} pr2`}>
+                    {isLoggedin ?
+                        <>
+                            <Link to={`../add-blog`}>
+                                <button className='ma3 br2 pointer'>Add a blog</button>
                             </Link>
-                            <td>{blog.body}</td>
-                            <td>{blog.date && blog.date.split('T')[0]}</td>
-                            <td><button value={blog.blog_id} onClick={this.deleteBlog}>Delete</button></td>
+                            <button className='ma3 mr4 br2 pointer' onClick={this.onLogoutButtonClick}>Logout</button>
+                        </>
+                        : <button className='ma3 br2 pointer' onClick={this.onLoginButtonClick}>Login</button>}
+                </div>
+                <table className='mh2 w-100'>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Blog</th>
+                            <th>Date</th>
                         </tr>
-                    )}
+                    </thead>
+                    <tbody>
+                        {(blogs || []).map(blog =>
+                            <tr key={blog.blog_id}>
+                                <Link to={`../blog/${blog.blog_id}`}>
+                                    <td>{blog.title}</td>
+                                </Link>
+                                <td>{blog.body.substring(0, 100)}{blog.body.substring(100) ? '...' : ''}</td>
+                                <td>{blog.date && blog.date.split('T')[0]}</td>
+                                {isLoggedin && <td><button className='pointer br2' value={blog.blog_id} onClick={this.deleteBlog}>Delete</button></td>}
+                            </tr>
+                        )}
+                    </tbody>
 
                 </table>
-                <LoginModal openLoginModal={openLoginModal} onCloseModal={this.onCloseModal} onSubmit={this.onLoginSubmit} />
+                <LoginModal openLoginModal={openLoginModal} onCloseModal={this.onCloseModal} setLoginState={this.setLoginState} />
             </div >
         );
     }
