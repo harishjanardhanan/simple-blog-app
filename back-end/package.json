@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "postinstall": "node dbconfig.js"
+    "postinstall": "node create-tables.js"
   },
   "keywords": [],
   "author": "",
