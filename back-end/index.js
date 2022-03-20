@@ -10,7 +10,6 @@ const connection = mysql.createConnection(db.config)
 
 connection.connect(err => {
     if (err) {
-        console.log(err, dbconfig, 'errr');
         return err;
     }
 })
@@ -37,7 +36,9 @@ app.post('/add-blog', (req, res) => {
         if (err) {
             return res.send(err)
         } else {
-            return res.send('Blog added successfully')
+            return res.json({
+                message: 'Blog added successfully'
+            })
         }
     })
 })
@@ -49,7 +50,9 @@ app.post('/edit-blog', (req, res) => {
         if (err) {
             return res.send(err)
         } else {
-            return res.send('Blog updated successfully')
+            return res.json({
+                message: 'Blog updated successfully'
+            })
         }
     })
 })
@@ -61,7 +64,9 @@ app.post('/delete-blog', (req, res) => {
         if (err) {
             return res.send(err)
         } else {
-            return res.send('Blog deleted successfully')
+            return res.json({
+                message: 'Blog deleted successfully'
+            })
         }
     })
 })
@@ -75,6 +80,29 @@ app.post('/blog/:id', (req, res) => {
             return res.json({
                 data: result[0]
             })
+        }
+    })
+})
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body
+    const GET_USER_DATA = `SELECT * FROM users WHERE name = '${username}' AND password = '${password}'`
+    connection.query(GET_USER_DATA, (err, result) => {
+        if (err) {
+            return res.send(err)
+        } else {
+            if (result.length > 0) {
+                return res.json({
+                    message: 'Login Success',
+                    user: username,
+                    isLoggedin: true
+                })
+            } else {
+                return res.json({
+                    message: 'Login Error',
+                    isLoggedin: false
+                })
+            }
         }
     })
 })
