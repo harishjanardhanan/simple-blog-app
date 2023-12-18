@@ -1,7 +1,15 @@
 var mysql = require('mysql');
-var db = require('./dbconfig')
+// var db = require('./dbconfig');
+var fs = require('fs');
 
-var con = mysql.createConnection(db.config);
+var con = mysql.createConnection({
+    host: 'hk-apps-server.mysql.database.azure.com',
+    user: 'uiepkltvet',
+    password: '50ERVYH3J714310D$',
+    database: 'sample_app',
+    port:3306,
+    ssl:{ca:fs.readFileSync(require('./assets/DigiCertGlobalRootCA.crt.pem'))}
+});
 
 con.connect(function (err) {
     if (err) throw err;
